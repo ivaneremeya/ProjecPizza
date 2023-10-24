@@ -1,35 +1,50 @@
 import React from "react"
+import qs from 'qs'
+import {useNavigate} from 'react-router-dom'
 import Categories from "../component/Categories"
-import Sort from "../component/Sort"
+import Sort, { arrSort } from "../component/Sort"
 import Skeleton from "../component/PizzaBlock/Skeleton"
 import PizzaBlock from "../component/PizzaBlock"
 import Pagination from "../component/Pagination"
 import { SearchContext } from "../App"
 import {useDispatch, useSelector} from 'react-redux'
-import {setCategoriesState} from '../redux/slice/filterSlice'
+import {setCategoriesState, setPaginationState, setFilters} from '../redux/slice/filterSlice'
 import axios from "axios"
  
 const Home = () => {
+  const Navigate = useNavigate();
   const [loading , setLoading] = React.useState(true)
   const [pizzas, setPizzas] = React.useState([])
   const Despatch = useDispatch();
+  const onChangeCtegories = (id) =>{ Despatch(setCategoriesState(id))}
+  const setCarentPage = (id) =>{ Despatch(setPaginationState(id))}
   const categoriesState = useSelector((state) => state.filter.categoriesState);
   const sortPizzas = useSelector((state) => state.filter.useSort.sortProperti)
+  const carenPage = useSelector((state) => state.filter.paginationState)
   
-  
-  const  [paginationState, setPaginationState ] = React.useState(1)
+  const isSearch = React.useRef(false);
+  const isMaunt = React.useRef(false);
+
   const {searchValue} = React.useContext(SearchContext)
-  console.log(categoriesState)
-  const onChangeCtegories = (id) =>{ Despatch(setCategoriesState(id))}
 
-
-
-
-  const skeletons = [...Array(6)].map((_, i) => <Skeleton key={i}/>)
   
+  
+  const fetchPizzas = () => {
+    setLoading(true)
+    axios.get(`https://651bade2194f77f2a5aeb191.mockapi.io/item?page=${carenPage}&limit=3&${categoriesState > 0? `category=${categoriesState}`: ''}&sortBy=${sortPizzas.sortProperti}&order=desc`)
+    .then((arr) => { 
+      setTimeout(() => {
+      setPizzas(arr.data)
+      setLoading(false);
+    }, 1000)
+  })
+  }
+  
+  const skeletons = [...Array(6)].map((_, i) => <Skeleton key={i}/>)
   const arrPizzas = pizzas.filter(
     (obj) => {
-      if(obj.title.toLowerCase().includes(searchValue.toLowerCase())) {
+      if(obj.title.toLowerCase().includes(searchValue.toLowerCase())
+      ) {
         return true
       }
       else {
@@ -39,19 +54,43 @@ const Home = () => {
   ).map(
     (value) => <PizzaBlock key={value.id}  sizes = {value.sizes} types = {value.types} imageUrl = {value.imageUrl} price = {value.price} title = {value.title}/>
   )
+  
+  
 
+
+  React.useEffect(()=>{
+    if(isMaunt) {
+      const queryString = qs.stringify({
+        categoriesState,
+        carenPage,
+        sortPizzas,
+      })
+      console.log(queryString)
+      Navigate(`?${queryString}`)
+    }
+    isMaunt.current = true
+  },[categoriesState,sortPizzas, carenPage])
+
+  // React.useEffect(()=>{
+  //  if(window.location.search){
+  //     const parse = qs.parse(window.location.search.substring(1))
+  //     console.log(parse) 
+  //     const sort = arrSort.find((obj)=> obj.sortProperti === parse.sortPizzas)
+  //     console.log({...parse, sort}) 
+  //     Despatch(setFilters({...parse})) 
+  //  }
+  //  isSearch.current=true
+   
+  // }, [])
+ 
   React.useEffect(() => {
-    setLoading(true)
-    axios.get(`https://651bade2194f77f2a5aeb191.mockapi.io/item?page=${paginationState}&limit=3&${categoriesState > 0? `category=${categoriesState}`: ''}&sortBy=${sortPizzas.sortProperti}&order=desc`)
-    .then((arr) =>
-    { 
-      setTimeout(() => {
-      setPizzas(arr.data)
-      setLoading(false);
-      window.scrollTo(0, 0)
-    }, 1000)
-  })
-} , [categoriesState,sortPizzas, paginationState])
+    // if(!isSearch) {
+     
+    // }
+    // isSearch.current=false
+    fetchPizzas()
+  } , [categoriesState,sortPizzas, carenPage]
+  )
     return (
       <div className="container">
         <div className="content__top">
@@ -66,7 +105,7 @@ const Home = () => {
             
           }
         </div>
-          <Pagination onChangePage = {(e) => setPaginationState(e)}/>
+          <Pagination value = {carenPage} onChangePage = {setCarentPage}/>
       </div> 
     )
 }

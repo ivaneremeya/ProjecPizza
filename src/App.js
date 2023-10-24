@@ -7,12 +7,15 @@ import { NotFaund } from "./pages/NotFaund";
 import { Routes, Route } from 'react-router-dom';
 
 
-export const SearchContext = React.createContext('')
+export const SearchContext = React.createContext()
+console.log()
+
 
 function App() {
 
 const [searchValue, setSearchValue] = React.useState('')
-
+// console.log()
+console.log(setSearchValue)
   return (
     <div className="wrapper">
       <SearchContext.Provider value={{searchValue, setSearchValue}}>

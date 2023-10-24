@@ -17,12 +17,12 @@ const Search = () => {
   const onClickUpdate = React.useCallback(
      debounce ((event) => {
       setSearchValue(event)},1000
-    ), []
+    ), [setSearchValue]
   )
 
   const onChangeInput = (e) =>{
-    setValue(e.target.valuee)
-    onClickUpdate(e.target.valuee)
+    setValue(e.target.value)
+    onClickUpdate(e.target.value)
   }
 
   
